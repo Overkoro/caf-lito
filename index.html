@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cafélito - Client Mobile</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: #0b0806; color: #f5eedc; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 10px; }
+        .phone-container { width: 100%; max-width: 400px; height: 820px; max-height: 95vh; background-color: #120d0a; border: 3px solid #332419; border-radius: 36px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8); display: flex; flex-direction: column; position: relative; overflow: hidden; }
+        .app-header { padding: 18px 20px 14px; background-color: #1e1611; border-bottom: 1px solid #332419; display: flex; justify-content: space-between; align-items: center; }
+        .brand-logo { font-size: 1.3rem; font-weight: 800; color: #e58e26; }
+        .user-pill { background-color: #2a1f18; border: 1px solid #332419; padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .user-avatar { width: 22px; height: 22px; border-radius: 50%; background-color: #e58e26; color: #000; font-weight: bold; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; }
+        .app-content { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: 80px; }
+        .view { display: none; flex-direction: column; gap: 16px; }
+        .view.active { display: flex; }
+        .card { background-color: #1e1611; border: 1px solid #332419; border-radius: 16px; padding: 16px; }
+        .card-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 12px; color: #e58e26; display: flex; justify-content: space-between; align-items: center; }
+        .btn { background-color: #e58e26; color: #000; border: none; border-radius: 10px; padding: 10px 16px; font-weight: 700; font-size: 0.9rem; cursor: pointer; }
+        .btn:active { opacity: 0.8; }
+        .btn-outline { background: transparent; border: 1px solid #332419; color: #f5eedc; }
+        .btn-sm { padding: 6px 10px; font-size: 0.8rem; border-radius: 8px; }
+        .btn-danger-sm { background-color: rgba(231, 76, 60, 0.2); color: #e74c3c; border: 1px solid rgba(231, 76, 60, 0.3); padding: 4px 8px; font-size: 0.75rem; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .fidelity-card { background: linear-gradient(135deg, #2c1a0e 0%, #4a2d18 100%); border: 1px solid #633c20; border-radius: 16px; padding: 18px; }
+        .fidelity-progress { height: 10px; background-color: rgba(0,0,0,0.5); border-radius: 5px; margin: 12px 0 8px; overflow: hidden; }
+        .fidelity-bar { height: 100%; background-color: #e58e26; width: 0%; transition: width 0.3s; }
+        
+        .category-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 8px; }
+        .category-scroll::-webkit-scrollbar { display: none; }
+        .cat-chip { background-color: #120d0a; border: 1px solid #332419; color: #a08c7d; padding: 6px 12px; border-radius: 16px; font-size: 0.78rem; white-space: nowrap; cursor: pointer; }
+        .cat-chip.active { background-color: #e58e26; color: #000; font-weight: bold; border-color: #e58e26; }
+
+        .product-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #332419; }
+        .product-item:last-child { border-bottom: none; }
+        .product-info h4 { font-size: 0.9rem; margin-bottom: 2px; }
+        .product-info p { font-size: 0.78rem; color: #a08c7d; }
+        .product-price { font-weight: 700; color: #e58e26; font-size: 0.85rem; margin-top: 2px; }
+        
+        .cart-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px dashed rgba(255,255,255,0.05); }
+        
+        .coupon-section { border-top: 1px dashed #332419; margin-top: 12px; padding-top: 12px; }
+        .coupon-row { display: flex; gap: 8px; margin-top: 6px; }
+        .input-control { background-color: #120d0a; border: 1px solid #332419; border-radius: 8px; padding: 8px 12px; color: #f5eedc; font-size: 0.85rem; outline: none; flex: 1; }
+        .input-control:focus { border-color: #e58e26; }
+        .coupon-msg { font-size: 0.8rem; margin-top: 6px; }
+        .msg-success { color: #2ecc71; }
+        .msg-error { color: #e74c3c; }
+        .bottom-nav { position: absolute; bottom: 0; left: 0; right: 0; height: 65px; background-color: #1e1611; border-top: 1px solid #332419; display: flex; justify-content: space-around; align-items: center; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; color: #a08c7d; background: none; border: none; font-size: 0.75rem; cursor: pointer; width: 25%; }
+        .nav-item.active { color: #e58e26; font-weight: bold; }
+        .auth-overlay { position: absolute; inset: 0; background-color: #120d0a; z-index: 50; display: flex; flex-direction: column; justify-content: center; padding: 24px; }
+        
+        .station-card { background-color: #1e1611; border: 1px solid #332419; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+        .station-header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .station-tag { font-size: 0.7rem; color: #e58e26; background: rgba(229, 142, 38, 0.1); padding: 2px 6px; border-radius: 6px; display: inline-block; margin-top: 4px; }
+        .duration-box { display: flex; align-items: center; justify-content: space-between; background: #120d0a; padding: 8px 12px; border-radius: 8px; border: 1px solid #332419; }
+        .duration-label { font-size: 0.8rem; color: #a08c7d; font-weight: 600; }
+        .duration-select { background: #1e1611; color: #e58e26; border: 1px solid #332419; border-radius: 6px; padding: 4px 8px; font-weight: bold; font-size: 0.85rem; outline: none; cursor: pointer; }
+        .auth-tabs { display: flex; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid #332419; padding-bottom: 8px; }
+        .auth-tab-btn { background: none; border: none; color: #a08c7d; font-weight: bold; font-size: 0.9rem; cursor: pointer; }
+        .auth-tab-btn.active { color: #e58e26; border-bottom: 2px solid #e58e26; padding-bottom: 4px; }
+    </style>
+</head>
+<body>
+
+    <div class="phone-container">
+        <!-- En-tête -->
+        <header class="app-header">
+            <div class="brand-logo">☕ Cafélito</div>
+            <div class="user-pill" onclick="logout()">
+                <div class="user-avatar" id="avatarPill">U</div>
+                <span id="namePill">Utilisateur</span>
+            </div>
+        </header>
+
+        <!-- Contenu -->
+        <main class="app-content">
+
+            <!-- ONGLET 1 : FIDÉLITÉ -->
+            <section id="view-fidelity" class="view active">
+                <div class="fidelity-card">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <span style="font-size:0.75rem; opacity:0.8;">Carte de Fidélité</span>
+                            <h3 id="cardName" style="font-size:1.1rem; margin-top:2px;">Chargement...</h3>
+                        </div>
+                        <span style="font-size:1.3rem;">☕</span>
+                    </div>
+
+                    <div style="margin-top:16px;">
+                        <div style="display:flex; justify-content:space-between; font-size:0.85rem;">
+                            <span>Points cumulés</span>
+                            <strong><span id="userPts">0</span> / 100 pts</strong>
+                        </div>
+                        <div class="fidelity-progress">
+                            <div class="fidelity-bar" id="progressBar"></div>
+                        </div>
+                        <p id="rewardTxt" style="font-size:0.75rem; opacity:0.8;">Encore 100 points avant votre boisson offerte !</p>
+                    </div>
+
+                    <div style="background:white; padding:10px; border-radius:12px; width:120px; height:120px; margin:15px auto 0; display:flex; align-items:center; justify-content:center;">
+                        <svg width="100" height="100" viewBox="0 0 100 100">
+                            <rect width="100" height="100" fill="white"/>
+                            <path d="M 10 10 H 35 V 35 H 10 Z M 15 15 V 30 H 30 V 15 Z M 20 20 H 25 V 25 H 20 Z" fill="black"/>
+                            <path d="M 65 10 H 90 V 35 H 65 Z M 70 15 V 30 H 85 V 15 Z M 75 20 H 80 V 25 H 75 Z" fill="black"/>
+                            <path d="M 10 65 H 35 V 90 H 10 Z M 15 70 V 85 H 30 V 70 Z M 20 75 H 25 V 80 H 20 Z" fill="black"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Bar Cafélito</div>
+                    <p style="font-size:0.85rem; color:#a08c7d; line-height:1.4;">
+                        Bienvenue ! Retrouvez tous vos avantages et coupons exclusifs dans l'onglet dédié.
+                    </p>
+                </div>
+            </section>
+
+            <!-- ONGLET 2 : COMMANDER EN LIGNE -->
+            <section id="view-order" class="view">
+                <div class="card">
+                    <div class="card-title">Carte du Bar</div>
+                    
+                    <div class="category-scroll">
+                        <button class="cat-chip active" onclick="filterCat('all', this)">Tous</button>
+                        <button class="cat-chip" onclick="filterCat('softs', this)">Softs</button>
+                        <button class="cat-chip" onclick="filterCat('bieres', this)">Bières</button>
+                        <button class="cat-chip" onclick="filterCat('pellegrino', this)">San Pellegrino</button>
+                        <button class="cat-chip" onclick="filterCat('chaudes', this)">Chaudes</button>
+                        <button class="cat-chip" onclick="filterCat('snacks', this)">Snacks</button>
+                        <button class="cat-chip" onclick="filterCat('desserts', this)">Desserts</button>
+                        <button class="cat-chip" onclick="filterCat('repas', this)">Repas</button>
+                    </div>
+
+                    <div id="productList"></div>
+                </div>
+
+                <!-- PANIER -->
+                <div class="card">
+                    <div class="card-title">
+                        <span>Votre Panier</span>
+                        <span id="cartBadge" style="font-size:0.8rem; color:#a08c7d;">0 article</span>
+                    </div>
+
+                    <div id="cartContent" style="font-size:0.85rem; color:#a08c7d; margin-bottom:10px;">
+                        Votre panier est vide.
+                    </div>
+
+                    <div class="coupon-section">
+                        <span style="font-size:0.85rem; font-weight:bold; color:#e58e26;">coupon?</span>
+                        <div class="coupon-row">
+                            <input type="text" id="couponCode" class="input-control" placeholder="Ex: CAFELITO10">
+                            <button class="btn btn-sm" onclick="applyCoupon()">Vérifier</button>
+                        </div>
+                        <div id="couponStatus" class="coupon-msg"></div>
+                    </div>
+
+                    <div style="border-top:1px solid #332419; margin-top:12px; padding-top:12px; display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <span style="font-size:0.75rem; color:#a08c7d;">Total</span>
+                            <div style="font-size:1.1rem; font-weight:bold; color:#e58e26;" id="totalPrice">0.00 €</div>
+                        </div>
+                        <button class="btn" onclick="checkout()">Commander</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ONGLET 3 : GAMING -->
+            <section id="view-gaming" class="view">
+                <div class="card-title">Zone Gaming</div>
+                <div id="gamingStationsContainer"></div>
+            </section>
+
+            <!-- ONGLET 4 : COUPONS GLOBAUX & PERSONNELS -->
+            <section id="view-coupons" class="view">
+                <div class="card-title">Vos Offres & Coupons Exclusifs</div>
+                <div id="clientCouponsList"></div>
+            </section>
+
+        </main>
+
+        <!-- Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" onclick="tab('view-fidelity', this)"><span>💳</span>Fidélité</button>
+            <button class="nav-item" onclick="tab('view-order', this)"><span>☕</span>Order</button>
+            <button class="nav-item" onclick="tab('view-gaming', this)"><span>🎮</span>Gaming</button>
+            <button class="nav-item" onclick="tab('view-coupons', this)"><span>🎟️</span>Coupons</button>
+        </nav>
+
+        <!-- ÉCRAN CONNEXION & TOKEN -->
+        <div id="loginOverlay" class="auth-overlay">
+            <div style="text-align:center; margin-bottom:15px;">
+                <h2 style="color:#e58e26; font-size:1.6rem;">☕ Cafélito</h2>
+                <p id="authSubtitle" style="font-size:0.82rem; color:#a08c7d; margin-top:4px;">Appareil non authentifié. Veuillez vous identifier.</p>
+            </div>
+
+            <div class="auth-tabs">
+                <button id="tabRegisterBtn" class="auth-tab-btn active" onclick="switchAuthMode('register')">Créer un compte</button>
+                <button id="tabLoginBtn" class="auth-tab-btn" onclick="switchAuthMode('login')">Se connecter</button>
+            </div>
+
+            <form id="formRegister" onsubmit="doRegister(event)" style="display:flex; flex-direction:column; gap:12px;">
+                <input type="text" id="regName" class="input-control" placeholder="Votre prénom / pseudo" required>
+                <input type="email" id="regEmail" class="input-control" placeholder="Votre adresse email" required>
+                <input type="password" id="regPassword" class="input-control" placeholder="Votre mot de passe" required>
+                <button type="submit" class="btn" style="margin-top:8px;">S'inscrire et générer le Token</button>
+            </form>
+
+            <form id="formLogin" onsubmit="doLogin(event)" style="display:none; flex-direction:column; gap:12px;">
+                <input type="email" id="loginEmail" class="input-control" placeholder="Votre e-mail de compte" required>
+                <input type="password" id="loginPassword" class="input-control" placeholder="Votre mot de passe" required>
+                <button type="submit" class="btn" style="margin-top:8px;">Valider et autoriser l'appareil</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const DB_USER_KEY = 'cafelito_app_user';
+        const DB_ACCOUNTS_KEY = 'cafelito_registered_accounts';
+        const DB_PRODUCTS_KEY = 'cafelito_shared_products';
+        const DB_ORDERS_KEY = 'cafelito_shared_orders';
+        const DB_GAMING_KEY = 'cafelito_shared_gaming';
+        const DB_STATIONS_KEY = 'cafelito_shared_gaming_stations';
+        const DB_COUPONS_KEY = 'cafelito_shared_coupons';
+
+        let user = null;
+        let cart = [];
+        let currentDiscount = 0;
+        let appliedCouponName = '';
+        let currentFilter = 'all';
+
+        const defaultStationsFallback = [
+            { id: 1, name: 'Nintendo Switch Normal', tag: 'eShop & Jeux Officiels', price: 5.00 },
+            { id: 2, name: 'Switch Hackée + PC Jailbreak', tag: 'PC dédié, Injection & Mods', price: 12.00 },
+            { id: 3, name: 'PlayStation 4 Standard', tag: 'Catalogue PS4 & Multijoueur', price: 4.00 },
+            { id: 4, name: 'PlayStation 4 Hackée', tag: 'CFW GoldHEN & Homebrews', price: 6.00 },
+            { id: 5, name: 'Wii U Hackée', tag: 'Tiramisu / Aroma CFW', price: 5.00 },
+            { id: 6, name: 'Wii U avec Wii', tag: 'vWii & Rétrogaming', price: 3.00 },
+            { id: 7, name: 'NES (Classic Console)', tag: 'Émulation 8-bit Vintage', price: 3.50 }
+        ];
+
+        window.onload = function() {
+            checkDeviceToken();
+            renderMenu();
+            renderGamingStations();
+            renderCouponsList();
+            
+            setInterval(() => {
+                syncUserDataFromStorage();
+                renderMenu();
+                renderGamingStations();
+                renderCouponsList();
+            }, 1500);
+        };
+
+        function checkDeviceToken() {
+            const storedUser = localStorage.getItem(DB_USER_KEY);
+            if (storedUser) {
+                user = JSON.parse(storedUser);
+                if (user && user.deviceToken) {
+                    document.getElementById('loginOverlay').style.display = 'none';
+                    updateUI();
+                    return;
+                }
+            }
+            document.getElementById('loginOverlay').style.display = 'flex';
+        }
+
+        // Synchronise les points et coupons modifiés depuis l'admin
+        function syncUserDataFromStorage() {
+            if (!user) return;
+            const accounts = JSON.parse(localStorage.getItem(DB_ACCOUNTS_KEY) || '[]');
+            const currentAcc = accounts.find(a => a.email.toLowerCase() === user.email.toLowerCase());
+            if (currentAcc) {
+                user.points = currentAcc.points;
+                user.personalCoupons = currentAcc.personalCoupons || [];
+                localStorage.setItem(DB_USER_KEY, JSON.stringify(user));
+                updateUI();
+            }
+        }
+
+        function generateToken() {
+            return 'TOK-' + Math.random().toString(36).substring(2, 10).toUpperCase() + '-' + Date.now();
+        }
+
+        function switchAuthMode(mode) {
+            if (mode === 'register') {
+                document.getElementById('formRegister').style.display = 'flex';
+                document.getElementById('formLogin').style.display = 'none';
+                document.getElementById('tabRegisterBtn').classList.add('active');
+                document.getElementById('tabLoginBtn').classList.remove('active');
+            } else {
+                document.getElementById('formRegister').style.display = 'none';
+                document.getElementById('formLogin').style.display = 'flex';
+                document.getElementById('tabRegisterBtn').classList.remove('active');
+                document.getElementById('tabLoginBtn').classList.add('active');
+            }
+        }
+
+        function doRegister(e) {
+            e.preventDefault();
+            const name = document.getElementById('regName').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+
+            user = { name, email, password, points: 35, personalCoupons: [], deviceToken: generateToken() };
+            const accounts = JSON.parse(localStorage.getItem(DB_ACCOUNTS_KEY) || '[]');
+            accounts.push(user);
+            localStorage.setItem(DB_ACCOUNTS_KEY, JSON.stringify(accounts));
+            localStorage.setItem(DB_USER_KEY, JSON.stringify(user));
+
+            document.getElementById('loginOverlay').style.display = 'none';
+            updateUI();
+        }
+
+        function doLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const accounts = JSON.parse(localStorage.getItem(DB_ACCOUNTS_KEY) || '[]');
+            const found = accounts.find(a => a.email.toLowerCase() === email.toLowerCase());
+
+            if (found && found.password === password) {
+                user = found;
+                user.deviceToken = generateToken();
+                localStorage.setItem(DB_USER_KEY, JSON.stringify(user));
+                document.getElementById('loginOverlay').style.display = 'none';
+                updateUI();
+            } else {
+                alert("Identifiants incorrects ou compte introuvable.");
+            }
+        }
+
+        function logout() {
+            if (confirm("Déconnecter cet appareil ?")) {
+                localStorage.removeItem(DB_USER_KEY);
+                location.reload();
+            }
+        }
+
+        function updateUI() {
+            if (!user) return;
+            document.getElementById('namePill').textContent = user.name;
+            document.getElementById('avatarPill').textContent = user.name.charAt(0).toUpperCase();
+            document.getElementById('cardName').textContent = user.name;
+            document.getElementById('userPts').textContent = user.points;
+            const pct = Math.min((user.points / 100) * 100, 100);
+            document.getElementById('progressBar').style.width = pct + '%';
+        }
+
+        function tab(id, btn) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        function filterCat(cat, btn) {
+            document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            currentFilter = cat;
+            renderMenu();
+        }
+
+        function renderMenu() {
+            const list = document.getElementById('productList');
+            if (!list) return;
+            list.innerHTML = '';
+
+            const allItems = JSON.parse(localStorage.getItem(DB_PRODUCTS_KEY) || '[]');
+            const availableItems = allItems.filter(i => i.active !== false);
+            const filtered = currentFilter === 'all' ? availableItems : availableItems.filter(i => i.category === currentFilter);
+
+            if (filtered.length === 0) {
+                list.innerHTML = '<p style="font-size:0.85rem; color:#a08c7d; text-align:center; padding:10px;">Aucun produit disponible.</p>';
+                return;
+            }
+
+            filtered.forEach(p => {
+                const el = document.createElement('div');
+                el.className = 'product-item';
+                el.innerHTML = `
+                    <div class="product-info">
+                        <h4>${p.name}</h4>
+                        <p>${p.desc}</p>
+                        <div class="product-price">${p.price.toFixed(2)} €</div>
+                    </div>
+                    <button class="btn btn-sm" onclick="addCart(${p.id})">+ Ajouter</button>
+                `;
+                list.appendChild(el);
+            });
+        }
+
+        function renderGamingStations() {
+            const container = document.getElementById('gamingStationsContainer');
+            if (!container) return;
+
+            let stations = JSON.parse(localStorage.getItem(DB_STATIONS_KEY));
+            if (!stations || stations.length === 0) {
+                stations = defaultStationsFallback;
+            }
+
+            container.innerHTML = '';
+            stations.forEach(s => {
+                const div = document.createElement('div');
+                div.className = 'station-card';
+                div.innerHTML = `
+                    <div class="station-header">
+                        <div>
+                            <strong style="font-size:0.9rem;">${s.name}</strong><br>
+                            <span class="station-tag">${s.tag}</span>
+                        </div>
+                        <div style="font-size:0.85rem; color:#e58e26; font-weight:bold;">${s.price.toFixed(2)} € / h</div>
+                    </div>
+                    <div class="duration-box">
+                        <span class="duration-label">Combien de temps ?</span>
+                        <select id="dur-station-${s.id}" class="duration-select">
+                            <option value="1">1 Heure (${s.price.toFixed(2)} €)</option>
+                            <option value="2">2 Heures (${(s.price * 2).toFixed(2)} €)</option>
+                            <option value="3">3 Heures (${(s.price * 3).toFixed(2)} €)</option>
+                            <option value="4">4 Heures (${(s.price * 4).toFixed(2)} €)</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-sm" onclick="bookGame('${s.name}', ${s.price}, 'dur-station-${s.id}')">Réserver la session</button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function renderCouponsList() {
+            const container = document.getElementById('clientCouponsList');
+            if (!container) return;
+
+            const globalCoupons = JSON.parse(localStorage.getItem(DB_COUPONS_KEY) || '[]');
+            const personalCoupons = (user && user.personalCoupons) ? user.personalCoupons : [];
+            const allCoupons = [...personalCoupons, ...globalCoupons];
+
+            if (allCoupons.length === 0) {
+                container.innerHTML = '<div class="card"><p style="font-size:0.8rem; color:#a08c7d; text-align:center;">Aucun coupon disponible pour le moment.</p></div>';
+                return;
+            }
+
+            container.innerHTML = '';
+            allCoupons.forEach(c => {
+                const isPersonal = personalCoupons.some(pc => pc.code === c.code);
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.style.marginBottom = '10px';
+                card.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <strong style="color:#e58e26;">${c.code}</strong> ${isPersonal ? '<span style="font-size:0.65rem; background:rgba(229,142,38,0.2); color:#e58e26; padding:2px 6px; border-radius:4px;">Personnel</span>' : ''}
+                            <p style="font-size:0.75rem; color:#a08c7d;">${c.desc || 'Offre spéciale'} (-${c.discount}%)</p>
+                        </div>
+                        <button class="btn btn-sm btn-outline" onclick="copyCode('${c.code}')">Copier</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function addCart(id) {
+            const items = JSON.parse(localStorage.getItem(DB_PRODUCTS_KEY) || '[]');
+            const prod = items.find(i => i.id === id);
+            if (!prod) return;
+            const exist = cart.find(i => i.id === id);
+            if (exist) { exist.qty++; } else { cart.push({ ...prod, qty: 1 }); }
+            renderCart();
+        }
+
+        function removeFromCart(id) {
+            const index = cart.findIndex(i => i.id === id);
+            if (index !== -1) {
+                if (cart[index].qty > 1) {
+                    cart[index].qty--;
+                } else {
+                    cart.splice(index, 1);
+                }
+            }
+            renderCart();
+        }
+
+        function renderCart() {
+            const box = document.getElementById('cartContent');
+            const totalEl = document.getElementById('totalPrice');
+            const badge = document.getElementById('cartBadge');
+
+            if (cart.length === 0) {
+                box.innerHTML = 'Votre panier est vide.';
+                totalEl.textContent = '0.00 €';
+                badge.textContent = '0 article';
+                return;
+            }
+
+            let subtotal = 0, qtyTotal = 0;
+            box.innerHTML = '';
+            cart.forEach(item => {
+                subtotal += item.price * item.qty;
+                qtyTotal += item.qty;
+                const div = document.createElement('div');
+                div.className = 'cart-row';
+                div.innerHTML = `
+                    <div>
+                        <span style="font-weight:600;">${item.name}</span> <span style="color:#a08c7d;">(x${item.qty})</span><br>
+                        <strong style="color:#e58e26; font-size:0.8rem;">${(item.price * item.qty).toFixed(2)} €</strong>
+                    </div>
+                    <button class="btn-danger-sm" onclick="removeFromCart(${item.id})">Retirer</button>
+                `;
+                box.appendChild(div);
+            });
+
+            let finalTotal = subtotal;
+            if (currentDiscount > 0) {
+                finalTotal = subtotal - (subtotal * currentDiscount / 100);
+            }
+
+            badge.textContent = `${qtyTotal} article(s)`;
+            totalEl.textContent = `${finalTotal.toFixed(2)} €`;
+        }
+
+        function applyCoupon() {
+            const codeInput = document.getElementById('couponCode').value.trim().toUpperCase();
+            const status = document.getElementById('couponStatus');
+            const globalCoupons = JSON.parse(localStorage.getItem(DB_COUPONS_KEY) || '[]');
+            const personalCoupons = (user && user.personalCoupons) ? user.personalCoupons : [];
+            const allCoupons = [...personalCoupons, ...globalCoupons];
+
+            const found = allCoupons.find(c => c.code.toUpperCase() === codeInput);
+
+            if (found) {
+                currentDiscount = found.discount;
+                appliedCouponName = `${found.code} (-${found.discount}%)`;
+                status.textContent = `Coupon '${found.code}' appliqué (-${found.discount}%) !`;
+                status.className = "coupon-msg msg-success";
+            } else {
+                currentDiscount = 0;
+                appliedCouponName = '';
+                status.textContent = "Code coupon invalide.";
+                status.className = "coupon-msg msg-error";
+            }
+            renderCart();
+        }
+
+        function checkout() {
+            if (cart.length === 0) return alert("Le panier est vide.");
+            const amount = parseFloat(document.getElementById('totalPrice').textContent);
+            const pts = Math.floor(amount);
+            
+            user.points += pts;
+            updateGlobalAccountPoints();
+            localStorage.setItem(DB_USER_KEY, JSON.stringify(user));
+            updateUI();
+
+            const newOrder = {
+                id: 'CMD-' + Math.floor(1000 + Math.random() * 9000),
+                clientName: user.name,
+                items: cart.map(i => `${i.name} (x${i.qty})`).join(', '),
+                coupon: appliedCouponName || 'Aucun',
+                total: amount.toFixed(2),
+                time: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+                status: 'En attente'
+            };
+
+            const existingOrders = JSON.parse(localStorage.getItem(DB_ORDERS_KEY) || '[]');
+            existingOrders.unshift(newOrder);
+            localStorage.setItem(DB_ORDERS_KEY, JSON.stringify(existingOrders));
+
+            alert(`Commande validée ! Total: ${amount.toFixed(2)} € (+${pts} pts).`);
+            cart = [];
+            currentDiscount = 0;
+            appliedCouponName = '';
+            document.getElementById('couponCode').value = '';
+            document.getElementById('couponStatus').textContent = '';
+            renderCart();
+        }
+
+        function bookGame(consoleName, pricePerHour, selectId) {
+            const hours = parseInt(document.getElementById(selectId).value);
+            const totalPrice = pricePerHour * hours;
+
+            if (confirm(`Réserver ${consoleName} pour ${hours}h (${totalPrice.toFixed(2)} €) ?`)) {
+                const pts = Math.floor(totalPrice);
+                user.points += pts;
+                updateGlobalAccountPoints();
+                localStorage.setItem(DB_USER_KEY, JSON.stringify(user));
+                updateUI();
+
+                const newBooking = {
+                    id: 'RES-' + Math.floor(1000 + Math.random() * 9000),
+                    clientName: user.name,
+                    console: consoleName,
+                    durationHours: hours,
+                    totalPrice: totalPrice.toFixed(2),
+                    time: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+                };
+
+                const existingGaming = JSON.parse(localStorage.getItem(DB_GAMING_KEY) || '[]');
+                existingGaming.unshift(newBooking);
+                localStorage.setItem(DB_GAMING_KEY, JSON.stringify(existingGaming));
+
+                alert(`Réservation confirmée ! +${pts} points.`);
+            }
+        }
+
+        function updateGlobalAccountPoints() {
+            let accounts = JSON.parse(localStorage.getItem(DB_ACCOUNTS_KEY) || '[]');
+            accounts = accounts.map(a => a.email.toLowerCase() === user.email.toLowerCase() ? { ...a, points: user.points } : a);
+            localStorage.setItem(DB_ACCOUNTS_KEY, JSON.stringify(accounts));
+        }
+
+        function copyCode(code) {
+            document.getElementById('couponCode').value = code;
+            tab('view-order', document.querySelectorAll('.nav-item')[1]);
+            applyCoupon();
+        }
+    </script>
+</body>
+</html>
